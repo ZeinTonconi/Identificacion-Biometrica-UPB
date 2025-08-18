@@ -1,0 +1,20 @@
+{
+  "name": "proyecto-node-postgres",
+  "version": "1.0.0",
+  "description": "Proyecto Node.js con PostgreSQL, Docker y Prisma",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "migrate": "npx prisma migrate dev --name init",
+    "seed": "node prisma/seed.js",
+    "studio": "npx prisma studio"
+  },
+  "devDependencies": {
+    "prisma": "^6.14.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.14.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.1"
+  }
+}
