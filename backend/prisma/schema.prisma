@@ -1,0 +1,62 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model user_types {
+  user_type_id Int @id @default(autoincrement())
+  type_name String @unique
+  users users[]
+}
+
+model users {
+  user_id Int @id @default(autoincrement())
+  ci String @unique
+  first_name String
+  last_name String
+  email String @unique
+  phone String?
+  user_type_id Int
+  user_type user_types @relation(fields: [user_type_id], references: [user_type_id])
+  code Int @unique
+  status Boolean @default(true)
+  registration_date DateTime @default(now())
+  faces faces[]
+  access_logs access_logs[]
+}
+
+model faces {
+  face_id Int @id @default(autoincrement())
+  user_id Int
+  user users @relation(fields: [user_id], references: [user_id])
+  encoding String
+  image_path String?
+  upload_date DateTime @default(now())
+}
+
+model devices {
+  device_id Int @id @default(autoincrement())
+  name String
+  location String?
+  ip_address String?
+  status Boolean @default(true)
+  registration_date DateTime @default(now())
+  access_logs access_logs[]
+}
+
+model access_logs {
+  log_id Int @id @default(autoincrement())
+  user_id Int?
+  user users? @relation(fields: [user_id], references: [user_id])
+  device_id Int
+  device devices @relation(fields: [device_id], references: [device_id])
+  access_date DateTime @default(now())
+  confidence Float
+  access_type String?
+  status String?
+  enterCode Boolean?
+}
