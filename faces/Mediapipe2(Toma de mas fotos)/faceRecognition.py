@@ -50,7 +50,7 @@ if camera_index not in available_cameras:
     camera_index = 0
 
 # Load all face and name files from the data directory
-data_dir = 'data3'
+data_dir = 'data2'
 faces = []
 labels = []
 
