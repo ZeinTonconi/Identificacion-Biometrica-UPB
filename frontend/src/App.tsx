@@ -67,9 +67,9 @@ function App() {
         onCapture={handleCapturePhoto}
       />
 
-      {showSpeech && (
+      {/* {showSpeech && (
         <SpeechReader text="HOLA LUIS DE LA UNIVERSIDAD PRIVADA BOLIVIANA, BIENVENIDO NUEVAMENTE A LA UNIVERSIDAD" />
-      )}
+      )} */}
     </div>
   );
 }
