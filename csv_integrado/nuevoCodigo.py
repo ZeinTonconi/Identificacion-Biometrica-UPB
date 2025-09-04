@@ -5,7 +5,6 @@ import pickle
 import mediapipe as mp
 import pandas as pd
 
-# --- 🔹 Funciones de preprocesamiento y augmentation ---
 def preprocess_face(face_img, size=(100, 100)):
     gray = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
     gray = cv2.equalizeHist(gray)
@@ -41,19 +40,21 @@ def augment_face(face):
     augmentations.append(preprocess_face(blurred))
     return augmentations
 
-# --- 🔹 Inicializar MediaPipe Face Mesh ---
+# Initialize MediaPipe Face Mesh
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1, min_detection_confidence=0.5)
 
-# --- 🔹 Cargar CSV y directorio de imágenes ---
+# Load CSV
 csv_path = 'csv_integrado/Datos_fotos.csv'
 df = pd.read_csv(csv_path)
+
+# Image directory
 image_dir = 'csv_integrado/fotos de chicos 100 M 2025-20250903T165147Z-1-001/fotos de chicos 100 M 2025'
 
-# --- 🔹 Crear carpeta de salida ---
+# Output directory
 os.makedirs('csv_integrado/dataUnificado', exist_ok=True)
 
-# --- 🔹 Procesar imágenes ---
+# Group by 'Nombre'
 for name, group in df.groupby('Nombre'):
     face_data_list = []
     names_list = []
@@ -72,27 +73,21 @@ for name, group in df.groupby('Nombre'):
 
         if results.multi_face_landmarks:
             landmarks = results.multi_face_landmarks[0].landmark
-            ih, iw, _ = frame.shape
 
-            # Bounding box original
+            ih, iw, _ = frame.shape
+            # Get bounding box from landmarks
             x_min = int(min([lm.x for lm in landmarks]) * iw)
             x_max = int(max([lm.x for lm in landmarks]) * iw)
             y_min = int(min([lm.y for lm in landmarks]) * ih)
             y_max = int(max([lm.y for lm in landmarks]) * ih)
 
-            # 🔹 Expandir bounding box para incluir orejas y cabeza (10% extra)
-            margin_x = int(0.1 * (x_max - x_min))
-            margin_y = int(0.1 * (y_max - y_min))
-            x_min = max(0, x_min - margin_x)
-            x_max = min(iw, x_max + margin_x)
-            y_min = max(0, y_min - margin_y)
-            y_max = min(ih, y_max + margin_y)
-
-            # Crop y resize
+            # Crop the face
             face = frame[y_min:y_max, x_min:x_max]
+
+            # Resize to 100x100
             face = cv2.resize(face, (100, 100))
 
-            # Augment y preprocesar
+            # Augment and preprocess
             augmented = augment_face(face)
             face_data_list.extend(augmented)
             names_list.extend([name] * len(augmented))
@@ -101,7 +96,6 @@ for name, group in df.groupby('Nombre'):
         else:
             print(f"Warning: No face detected in {filename}. Skipping.")
 
-    # Guardar datos
     if face_data_list:
         face_data = np.asarray(face_data_list)
         print(f"Shape of features for {name}: {face_data.shape}")
@@ -118,4 +112,4 @@ for name, group in df.groupby('Nombre'):
     else:
         print(f"No valid data processed for {name}.")
 
-print("Processing complete. All data unified and saved in 'csv_integrado/dataUnificado/' folder.")
+print("Processing complete. All data unified and saved in 'csv integrado/dataUnificado/' folder.")

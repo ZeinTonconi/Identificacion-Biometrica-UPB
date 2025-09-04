@@ -26,7 +26,7 @@ print(f"Total data: {X_all.shape}, total labels: {len(y_all)}")
 # --- DIVIDIR EN TRAIN Y TEST ---
 # Usamos stratify para mantener balance por persona
 X_train, X_test, y_train, y_test = train_test_split(
-    X_all, y_all, test_size=0.7, random_state=42, stratify=y_all
+    X_all, y_all, test_size=0.85, random_state=42, stratify=y_all
 )
 
 print(f"Train: {X_train.shape}, Test: {X_test.shape}")
