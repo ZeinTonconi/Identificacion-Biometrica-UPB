@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: mydatabase
     ports:
-      - "5433:5432"
+      - "5433:5432"  # Mantengo 5433 como puerto expuesto en el host
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
       interval: 5s
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "4000:4000"  # Cambio a 4000:4000 para que coincida con index.js
     depends_on:
       db:
         condition: service_healthy

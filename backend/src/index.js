@@ -1,12 +1,13 @@
 const express = require('express');
 const prisma = require('./db');
+const { registerUser } = require('./controllers/usersController');
 
 const app = express();
 const port = 4000;
 
 app.use(express.json());
 
-// Endpoint para user_types
+// Existing endpoints...
 app.get('/user_types', async (req, res) => {
   try {
     const userTypes = await prisma.user_types.findMany();
@@ -17,7 +18,6 @@ app.get('/user_types', async (req, res) => {
   }
 });
 
-// Endpoint para users
 app.get('/users', async (req, res) => {
   try {
     const users = await prisma.users.findMany({
@@ -30,7 +30,6 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// Endpoint para faces
 app.get('/faces', async (req, res) => {
   try {
     const faces = await prisma.faces.findMany({
@@ -43,7 +42,6 @@ app.get('/faces', async (req, res) => {
   }
 });
 
-// Endpoint para devices
 app.get('/devices', async (req, res) => {
   try {
     const devices = await prisma.devices.findMany();
@@ -54,7 +52,6 @@ app.get('/devices', async (req, res) => {
   }
 });
 
-// Endpoint para access_logs
 app.get('/access_logs', async (req, res) => {
   try {
     const logs = await prisma.access_logs.findMany({
@@ -66,6 +63,9 @@ app.get('/access_logs', async (req, res) => {
     res.status(500).json({ error: 'Error querying access_logs' });
   }
 });
+
+// New endpoint
+app.post('/register', registerUser);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
