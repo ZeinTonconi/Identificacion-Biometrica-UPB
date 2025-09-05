@@ -103,7 +103,7 @@ async def recognize(file: UploadFile = File(...)):
 # --- Añadir nueva cara ---
 # --- Añadir nueva cara con augmentación ---
 @app.post("/add_face")
-async def add_face(file: UploadFile = File(...), name: str = ""):
+async def add_face(file: UploadFile = File(...), name: str = "", dataset_name: str = "faces_dataset.pkl", model_name: str = "knn_model.pkl"):
     global X_all, y_all, knn_model
 
     if not name:
@@ -138,7 +138,7 @@ async def add_face(file: UploadFile = File(...), name: str = ""):
     fc = frame[y_min:y_max, x_min:x_max]
     fc = cv2.resize(fc, (100, 100))
 
-    # Data augmentation
+    # --- Data augmentation ---
     def augment_face(face):
         aug = [face]
         center = (face.shape[1]//2, face.shape[0]//2)
@@ -166,37 +166,41 @@ async def add_face(file: UploadFile = File(...), name: str = ""):
 
     embeddings_array = np.vstack(embeddings_list)
     labels_array = np.array([name] * embeddings_array.shape[0])
-    faces_array = np.stack([cv2.resize(f, (100,100)) for f in augmented_faces])
 
-    # Actualizar dataset
-    dataset_path = "embeddings_data/faces_dataset.pkl"
+    # --- Guardar dataset ---
+    dataset_path = os.path.join("embeddings_data", dataset_name)
     os.makedirs("embeddings_data", exist_ok=True)
 
+    # 🔹 Mostrar tamaño antes de actualizar
     if os.path.exists(dataset_path):
         with open(dataset_path, "rb") as f:
             data = pickle.load(f)
+        print(f"[ANTES] Total embeddings en dataset: {data['embeddings'].shape[0]}")
         X_all = np.vstack([data["embeddings"], embeddings_array])
         y_all = np.append(data["labels"], labels_array)
-        faces_all = np.vstack([data["faces"], faces_array])
     else:
+        print("[ANTES] Dataset no existe, iniciando uno nuevo...")
         X_all = embeddings_array
         y_all = labels_array
-        faces_all = faces_array
 
     with open(dataset_path, "wb") as f:
-        pickle.dump({"embeddings": X_all, "labels": y_all, "faces": faces_all}, f)
+        pickle.dump({"embeddings": X_all, "labels": y_all}, f)
 
-    # Reentrenar KNN y guardar modelo asegurando el path
+    # 🔹 Mostrar tamaño después de actualizar
+    print(f"[DESPUÉS] Total embeddings en dataset: {X_all.shape[0]}")
+
+    # --- Reentrenar y guardar modelo ---
     knn_model = KNeighborsClassifier(n_neighbors=5, weights='distance', metric='euclidean')
     knn_model.fit(X_all, y_all)
 
     os.makedirs("modelos", exist_ok=True)
-    model_path = os.path.join("modelos", "knn_model.pkl")
+    model_path = os.path.join("modelos", model_name)
     with open(model_path, "wb") as f:
         pickle.dump(knn_model, f)
 
     return {
         "message": f"Cara de {name} añadida correctamente con {len(augmented_faces)} augmentaciones",
         "dataset_total": X_all.shape[0],
+        "dataset_path": dataset_path,
         "model_path": model_path
     }
