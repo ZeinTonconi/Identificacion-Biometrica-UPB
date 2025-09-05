@@ -25,7 +25,7 @@ app.add_middleware(
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1, min_detection_confidence=0.5)
 
-UNKNOWN_THRESHOLD = 0.6
+UNKNOWN_THRESHOLD = 0.9
 
 # --- Cargar dataset y modelo ---
 def load_data_model():
@@ -95,10 +95,10 @@ async def recognize(file: UploadFile = File(...)):
             return {"name": "Cara no registrada", "confidence": float(max_prob)}
         else:
             pred_name = knn_model.classes_[np.argmax(probs)]
-            return {"name": str(pred_name), "confidence": float(max_prob)}
+            return {"name": str(pred_name), "confidence": float(max_prob)*100}
     else:
         pred_name = knn_model.predict(r)[0]
-        return {"name": str(pred_name), "confidence": 1.0}
+        return {"name": str(pred_name), "confidence": float(max_prob)*100}
 
 # --- Añadir nueva cara ---
 # --- Añadir nueva cara con augmentación ---
@@ -128,14 +128,9 @@ async def add_face(file: UploadFile = File(...), name: str = "", dataset_name: s
     y_min = int(min([lm.y for lm in landmarks]) * ih)
     y_max = int(max([lm.y for lm in landmarks]) * ih)
 
-    margin_x = int(0.1 * (x_max - x_min))
-    margin_y = int(0.1 * (y_max - y_min))
-    x_min = max(0, x_min - margin_x)
-    x_max = min(iw, x_max + margin_x)
-    y_min = max(0, y_min - margin_y)
-    y_max = min(ih, y_max + margin_y)
-
+    # recorte sin márgenes
     fc = frame[y_min:y_max, x_min:x_max]
+
     fc = cv2.resize(fc, (100, 100))
 
     # --- Data augmentation ---

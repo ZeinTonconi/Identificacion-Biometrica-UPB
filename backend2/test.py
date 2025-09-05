@@ -65,7 +65,7 @@ print(f"Embeddings guardados en: {save_path}")
 
 # --- ENTRENAR KNN ---
 param_grid = {
-    'n_neighbors': [1, 3, 5, 7, 9],
+    'n_neighbors': [5, 7, 9],
     'weights': ['uniform', 'distance'],
     'metric': ['euclidean', 'manhattan', 'minkowski']
 }
