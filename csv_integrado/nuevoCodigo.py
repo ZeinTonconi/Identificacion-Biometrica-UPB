@@ -52,10 +52,19 @@ df = pd.read_csv(csv_path)
 image_dir = 'csv_integrado/fotos de chicos 100 M 2025-20250903T165147Z-1-001/fotos de chicos 100 M 2025'
 
 # Output directory
-os.makedirs('csv_integrado/dataUnificado', exist_ok=True)
+output_dir = 'csv_integrado/dataUnificado'
+os.makedirs(output_dir, exist_ok=True)
 
 # Group by 'Nombre'
 for name, group in df.groupby('Nombre'):
+    # Verificar si los archivos .pkl ya existen
+    face_filename = os.path.join(output_dir, f'faces_{name}.pkl')
+    name_filename = os.path.join(output_dir, f'names_{name}.pkl')
+    
+    if os.path.exists(face_filename) and os.path.exists(name_filename):
+        print(f"Archivos .pkl ya existen para {name}. Omitiendo procesamiento.")
+        continue
+
     face_data_list = []
     names_list = []
 
@@ -100,11 +109,9 @@ for name, group in df.groupby('Nombre'):
         face_data = np.asarray(face_data_list)
         print(f"Shape of features for {name}: {face_data.shape}")
 
-        face_filename = os.path.join('csv_integrado/dataUnificado', f'faces_{name}.pkl')
         with open(face_filename, 'wb') as w:
             pickle.dump(face_data, w)
 
-        name_filename = os.path.join('csv_integrado/dataUnificado', f'names_{name}.pkl')
         with open(name_filename, 'wb') as file:
             pickle.dump(names_list, file)
 
@@ -112,4 +119,4 @@ for name, group in df.groupby('Nombre'):
     else:
         print(f"No valid data processed for {name}.")
 
-print("Processing complete. All data unified and saved in 'csv integrado/dataUnificado/' folder.")
+print("Processing complete. New data unified and saved in 'csv_integrado/dataUnificado/' folder.")

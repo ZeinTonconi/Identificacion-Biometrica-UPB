@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.neighbors import KNeighborsClassifier
 from deepface import DeepFace
 import sys
 import logging
@@ -18,7 +19,7 @@ logging.basicConfig(filename='deepface_errors.log', level=logging.ERROR,
 # Carpeta donde guardaste los datos
 data_dir = 'csv_integrado/dataUnificado'
 
-# --- CARGAR DATOS ---
+# --- CARGAR DATOS Y GENERAR EMBEDDINGS ---
 X_all, y_all = [], []
 
 for file in os.listdir(data_dir):
@@ -35,14 +36,21 @@ for file in os.listdir(data_dir):
             try:
                 # Convertir de [0,1] a [0,255] y formato imagen
                 face_img = (face.reshape(100, 100) * 255).astype(np.uint8)
-                face_img = np.stack([face_img] * 3, axis=-1)  # Convertir a BGR
+                face_img = np.stack([face_img] * 3, axis=-1)  # Convertir a RGB
                 # Extraer embedding con Facenet512
-                embedding = DeepFace.represent(face_img, model_name='Facenet512', enforce_detection=False)
-                embeddings.append(embedding[0]['embedding'])
+                embedding = DeepFace.represent(face_img, model_name='Facenet512', enforce_detection=False)[0]['embedding']
+                embeddings.append(embedding)
             except Exception as e:
                 logging.error(f"Error procesando embedding para {name} (imagen {idx}): {str(e)}")
                 continue
+        
         if embeddings:  # Solo añadir si hay embeddings válidos
+            # Guardar embeddings individuales para esta persona
+            embeddings_file = os.path.join(data_dir, f'embeddings_{name}.pkl')
+            with open(embeddings_file, 'wb') as f:
+                pickle.dump(embeddings, f)
+            print(f"Embeddings guardados para {name} en: {embeddings_file}")
+            
             X_all.extend(embeddings)
             y_all.extend([name] * len(embeddings))
             print(f"Procesado {name}: {len(embeddings)} embeddings válidos")
@@ -95,9 +103,8 @@ print(f"Recall (macro): {rec:.3f}")
 print(f"F1-score (macro): {f1:.3f}")
 
 # --- Fallback a KNN si SVM no es suficiente ---
-from sklearn.neighbors import KNeighborsClassifier
-knn = KNeighborsClassifier(n_neighbors=1)  # k=1 para maximizar precisión
+knn = KNeighborsClassifier(n_neighbors=5)
 knn.fit(X_train, y_train)
 y_pred_knn = knn.predict(X_test)
 acc_knn = accuracy_score(y_test, y_pred_knn)
-print(f"KNN Accuracy (k=1): {acc_knn:.3f}")
+print(f"KNN Accuracy (k=5): {acc_knn:.3f}")
